@@ -49,3 +49,17 @@ func (r *TransactionRepository) SelectTransactionByID(id uint) (model.Transactio
 	}
 	return transaction, nil
 }
+
+func (r *TransactionRepository) CountTransactionsLastHour(userID uint) (int, error) {
+	var count int
+	query := `
+        SELECT COUNT(*) 
+        FROM transactions 
+        WHERE from_user_id = $1 AND date_initiated >= NOW() - INTERVAL '1 hour'
+    `
+	err := r.DB.QueryRow(query, userID).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}

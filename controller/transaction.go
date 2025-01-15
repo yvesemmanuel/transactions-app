@@ -22,21 +22,49 @@ func (c *TransactionController) CreateTransaction(g *gin.Context) {
 	db := c.DB
 	var post model.PostTransaction
 	if err := g.ShouldBindJSON(&post); err == nil {
-		transaction_repo := repository.NewTransactionRepository(db)
+		userRepo := repository.NewUserRepository(db)
+		transactionRepo := repository.NewTransactionRepository(db)
 
-		err := transaction_repo.CreateTransaction(post.FromUserId, post.ToUserId, post.Amount)
+		// Fraud detection: Check recent transactions
+		maxTransactionsCount := 5
+		transactionCount, err := transactionRepo.CountTransactionsLastHour(post.FromUserId)
 		if err != nil {
-			g.JSON(http.StatusInternalServerError, gin.H{"status": "success", "msg": "failed to create transaction"})
+			g.JSON(http.StatusInternalServerError, gin.H{"status": "failed", "error": "failed to check transaction history"})
 			return
 		}
 
-		err = transaction_repo.UpdateUserBalance(post.FromUserId, -post.Amount)
+		if transactionCount >= maxTransactionsCount {
+			g.JSON(http.StatusForbidden, gin.H{
+				"status":  "fraud",
+				"message": "transaction blocked due to suspected fraud",
+			})
+			return
+		}
+
+		sender, err := userRepo.SelectUserByID(post.FromUserId)
+		if err != nil {
+			g.JSON(http.StatusNotFound, gin.H{"status": "failed", "msg": "sender not found"})
+			return
+		}
+
+		if sender.Amount < post.Amount {
+			g.JSON(http.StatusBadRequest, gin.H{"status": "failed", "error": "insufficient balance"})
+			return
+		}
+
+		err = transactionRepo.CreateTransaction(post.FromUserId, post.ToUserId, post.Amount)
+		if err != nil {
+			g.JSON(http.StatusInternalServerError, gin.H{"status": "failed", "error": "failed to create transaction"})
+			return
+		}
+
+		err = transactionRepo.UpdateUserBalance(post.FromUserId, -post.Amount)
 		if err != nil {
 			g.JSON(http.StatusInternalServerError, gin.H{"status": "failed", "error": "failed to update sender's balance"})
 			return
 		}
 
-		err = transaction_repo.UpdateUserBalance(post.ToUserId, post.Amount)
+		err = transactionRepo.UpdateUserBalance(post.ToUserId, post.Amount)
 		if err != nil {
 			g.JSON(http.StatusInternalServerError, gin.H{"status": "failed", "error": "failed to update receiver's balance"})
 			return
@@ -45,9 +73,8 @@ func (c *TransactionController) CreateTransaction(g *gin.Context) {
 		g.JSON(http.StatusOK, gin.H{"status": "success", "message": "transaction completed successfully"})
 
 	} else {
-		g.JSON(http.StatusBadRequest, gin.H{"status": "failed", "msg": "invalid request", "error": err})
+		g.JSON(http.StatusBadRequest, gin.H{"status": "failed", "msg": "invalid request", "error": err.Error()})
 	}
-
 }
 
 func (c *TransactionController) GetTransaction(g *gin.Context) {

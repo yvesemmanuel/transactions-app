@@ -3,6 +3,7 @@ package controller
 import (
 	"database/sql"
 	"net/http"
+	"strconv"
 
 	"transactions-app/model"
 	"transactions-app/repository"
@@ -31,9 +32,15 @@ func (c *UserController) GetUsers(g *gin.Context) {
 
 func (c *UserController) GetUserByID(g *gin.Context) {
 	db := c.DB
-	id := g.Param("id")
 	repo_user := repository.NewUserRepository(db)
-	user, err := repo_user.SelectUserByID(id)
+
+	idStr := g.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		g.JSON(http.StatusInternalServerError, gin.H{"status": "failed", "error": err})
+		return
+	}
+	user, err := repo_user.SelectUserByID(uint(id))
 	if err != nil {
 		g.JSON(http.StatusNotFound, gin.H{"status": "failed", "msg": "user not found"})
 		return
