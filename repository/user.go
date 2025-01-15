@@ -12,7 +12,7 @@ type UserRepository struct {
 	DB *sql.DB
 }
 
-func GetUserRepository(db *sql.DB) UserRepositoryInterface {
+func InstanteUserRepository(db *sql.DB) UserRepositoryInterface {
 	return &UserRepository{DB: db}
 }
 

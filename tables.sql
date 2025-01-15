@@ -1,0 +1,14 @@
+CREATE TABLE users (
+    amount FLOAT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    phone VARCHAR(15) NOT NULL,
+    date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE schedules (
+    id SERIAL PRIMARY KEY,
+    phone VARCHAR(15) NOT NULL,
+    priority INT NOT NULL,
+    scheduled_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_user FOREIGN KEY (phone) REFERENCES users (phone)
+);

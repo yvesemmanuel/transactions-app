@@ -27,11 +27,16 @@ func (a *App) CreateConnection() {
 
 func (a *App) CreateRoutes() {
 	routes := gin.Default()
-	user_controller := controller.NewUserController(a.DB)
+	userController := controller.InstanceUserController(a.DB)
+	scheduleController := controller.InstanceScheduleController(a.DB)
 
-	routes.POST("/user", user_controller.CreateUser)
-	routes.GET("/user/:id", user_controller.GetUserByPhone)
-	routes.GET("/users", user_controller.GetUsers)
+	routes.POST("/user", userController.CreateUser)
+	routes.GET("/user/:id", userController.GetUserByPhone)
+	routes.GET("/users", userController.GetUsers)
+
+	routes.POST("/schedule", scheduleController.AddToQueue)
+	routes.DELETE("/schedule", scheduleController.RemoveFromQueue)
+	routes.GET("/schedule", scheduleController.GetQueue)
 
 	a.Routes = routes
 }
