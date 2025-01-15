@@ -12,12 +12,12 @@ type UserRepository struct {
 	DB *sql.DB
 }
 
-func NewUserRepository(db *sql.DB) UserRepositoryInterface {
+func GetUserRepository(db *sql.DB) UserRepositoryInterface {
 	return &UserRepository{DB: db}
 }
 
-func (r *UserRepository) CreateUser(post model.PostUser) bool {
-	stmt, err := r.DB.Prepare("INSERT INTO users (name, amount, date_added) VALUES ($1, $2, $3)")
+func (r *UserRepository) CreateUser(user model.PostUser) bool {
+	stmt, err := r.DB.Prepare("INSERT INTO users (phone, name, date_added) VALUES ($1, $2, $3)")
 	if err != nil {
 		log.Println(err)
 		return false
@@ -25,7 +25,7 @@ func (r *UserRepository) CreateUser(post model.PostUser) bool {
 	defer stmt.Close()
 
 	currentDate := time.Now()
-	_, err = stmt.Exec(post.Name, post.Amount, currentDate)
+	_, err = stmt.Exec(&user.Phone, user.Name, currentDate)
 	if err != nil {
 		log.Println(err)
 		return false
@@ -44,7 +44,7 @@ func (r *UserRepository) SelectUsers() []model.User {
 
 	for rows.Next() {
 		var user model.User
-		err := rows.Scan(&user.Id, &user.Name, &user.Amount, &user.DateAdded)
+		err := rows.Scan(&user.Phone, &user.Name, &user.DateAdded)
 		if err != nil {
 			log.Println(err)
 		} else {
@@ -59,9 +59,9 @@ func (r *UserRepository) SelectUsers() []model.User {
 	return result
 }
 
-func (r *UserRepository) SelectUserByID(id uint) (model.User, error) {
+func (r *UserRepository) SelectUserByPhone(phone string) (model.User, error) {
 	var user model.User
-	err := r.DB.QueryRow("SELECT * FROM users WHERE id = $1", id).Scan(&user.Id, &user.Name, &user.Amount, &user.DateAdded)
+	err := r.DB.QueryRow("SELECT * FROM users WHERE phone = $1", phone).Scan(&user.Phone, &user.Name, &user.DateAdded)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return model.User{}, nil

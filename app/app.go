@@ -28,12 +28,10 @@ func (a *App) CreateConnection() {
 func (a *App) CreateRoutes() {
 	routes := gin.Default()
 	user_controller := controller.NewUserController(a.DB)
-	transaction_controller := controller.NewTransactionController(a.DB)
 
 	routes.POST("/user", user_controller.CreateUser)
-	routes.GET("/user/:id", user_controller.GetUserByID)
+	routes.GET("/user/:id", user_controller.GetUserByPhone)
 	routes.GET("/users", user_controller.GetUsers)
-	routes.POST("/transactions/", transaction_controller.CreateTransaction)
 
 	a.Routes = routes
 }
