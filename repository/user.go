@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"fintech-app/model"
+	"transactions-app/model"
 )
 
 type UserRepository struct {

@@ -1,6 +1,6 @@
 package repository
 
-import "fintech-app/model"
+import "transactions-app/model"
 
 type UserRepositoryInterface interface {
 	CreateUser(post model.PostUser) bool

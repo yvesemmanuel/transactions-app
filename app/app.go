@@ -2,11 +2,12 @@ package app
 
 import (
 	"database/sql"
-	"fintech-app/controller"
 	"fmt"
 	"log"
+	"transactions-app/controller"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq"
 )
 
 type App struct {
@@ -26,10 +27,13 @@ func (a *App) CreateConnection() {
 
 func (a *App) CreateRoutes() {
 	routes := gin.Default()
-	controller := controller.NewUserController(a.DB)
+	user_controller := controller.NewUserController(a.DB)
+	transaction_controller := controller.NewTransactionController(a.DB)
 
-	routes.GET("/users", controller.GetUsers)
-	routes.GET("/user/:id", controller.GetUserByID)
+	routes.POST("/user", user_controller.CreateUser)
+	routes.GET("/user/:id", user_controller.GetUserByID)
+	routes.GET("/users", user_controller.GetUsers)
+	routes.POST("/transactions/", transaction_controller.CreateTransaction)
 
 	a.Routes = routes
 }

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fintech-app/app"
+	"transactions-app/app"
 )
 
 func main() {

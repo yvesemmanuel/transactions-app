@@ -1,4 +1,4 @@
-module fintech-app
+module transactions-app
 
 go 1.23.4
 

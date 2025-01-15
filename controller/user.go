@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"net/http"
 
-	"fintech-app/model"
-	"fintech-app/repository"
+	"transactions-app/model"
+	"transactions-app/repository"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,15 +18,19 @@ func NewUserController(db *sql.DB) UserControllerInterface {
 	return &UserController{DB: db}
 }
 
-func (m *UserController) GetUsers(g *gin.Context) {
-	db := m.DB
+func (c *UserController) GetUsers(g *gin.Context) {
+	db := c.DB
 	repo_user := repository.NewUserRepository(db)
 	get_user := repo_user.SelectUsers()
-	g.JSON(http.StatusOK, gin.H{"status": "success", "data": get_user, "msg": "get user successfully"})
+	if get_user == nil {
+		g.JSON(http.StatusInternalServerError, gin.H{"status": "failed"})
+		return
+	}
+	g.JSON(http.StatusOK, gin.H{"status": "success", "data": get_user})
 }
 
-func (m *UserController) GetUserByID(g *gin.Context) {
-	db := m.DB
+func (c *UserController) GetUserByID(g *gin.Context) {
+	db := c.DB
 	id := g.Param("id")
 	repo_user := repository.NewUserRepository(db)
 	user, err := repo_user.SelectUserByID(id)
@@ -34,21 +38,21 @@ func (m *UserController) GetUserByID(g *gin.Context) {
 		g.JSON(http.StatusNotFound, gin.H{"status": "failed", "msg": "user not found"})
 		return
 	}
-	g.JSON(http.StatusOK, user)
+	g.JSON(http.StatusOK, gin.H{"status": "success", "data": user})
 }
 
-func (m *UserController) CreateUser(g *gin.Context) {
-	db := m.DB
+func (c *UserController) CreateUser(g *gin.Context) {
+	db := c.DB
 	var post model.PostUser
 	if err := g.ShouldBindJSON(&post); err == nil {
 		repo_user := repository.NewUserRepository(db)
 		insert := repo_user.CreateUser(post)
 		if insert {
-			g.JSON(http.StatusOK, gin.H{"status": "success"})
+			g.JSON(http.StatusOK, gin.H{"status": "success", "msg": "user created successfully"})
 		} else {
-			g.JSON(http.StatusInternalServerError, gin.H{"status": "failed"})
+			g.JSON(http.StatusInternalServerError, gin.H{"status": "failed", "msg": "user not created"})
 		}
 	} else {
-		g.JSON(http.StatusBadRequest, gin.H{"status": "failed", "msg": err})
+		g.JSON(http.StatusBadRequest, gin.H{"status": "failed", "msg": "invalid request", "error": err})
 	}
 }
